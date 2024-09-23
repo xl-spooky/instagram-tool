@@ -2,6 +2,7 @@ from instaloader.instaloader import Instaloader
 from instaloader.structures import Profile
 import argparse
 import time
+from .models import Args
 
 def login_instagram(username: str) -> Instaloader | None:
     loader = Instaloader()
@@ -49,33 +50,37 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Instagram Followers Checker")
     parser.add_argument('--username', required=True, help="Instagram username")
     parser.add_argument('--output', default="non_followers.txt", help="Output file for non-followers")
-    
-    args = parser.parse_args()
 
-    loader = login_instagram(args.username)
+    args = parser.parse_args(namespace=Args())
+
+    username: str = args.username
+    output_file: str = args.output
+
+    loader: Instaloader | None = login_instagram(username)
     if not loader:
         return
 
     print("Fetching following list...")
-    following = fetch_following(loader, args.username)
+    following: set[str] = fetch_following(loader, username)
 
-    time.sleep(120)
+    # Add delay to avoid rate limits
+    time.sleep(300)
 
     print("Fetching followers list...")
-    followers = fetch_followers(loader, args.username)
+    followers: set[str] = fetch_followers(loader, username)
 
     if not followers or not following:
         print("No followers or following data was retrieved.")
         return
 
-    non_followers = find_non_followers(followers, following)
+    non_followers: set[str] = find_non_followers(followers, following)
 
     if non_followers:
         print("These users are not following you back:")
         for user in non_followers:
             print(user)
         
-        save_results(non_followers, args.output)
+        save_results(non_followers, output_file)
     else:
         print("Everyone you follow is following you back!")
 
