@@ -2,7 +2,10 @@ from instaloader.instaloader import Instaloader
 from instaloader.structures import Profile
 import argparse
 import time
-from .models import Args
+
+class Args:
+    username: str
+    output: str
 
 def login_instagram(username: str) -> Instaloader | None:
     loader = Instaloader()
