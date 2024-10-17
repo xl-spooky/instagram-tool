@@ -1,7 +1,8 @@
 from instaloader.instaloader import Instaloader
 from instaloader.structures import Profile
 import argparse
-import time
+import asyncio
+from pathlib import Path
 
 class Args:
     username: str
@@ -10,7 +11,7 @@ class Args:
 def login_instagram(username: str) -> Instaloader | None:
     loader = Instaloader()
     try:
-        loader.load_session_from_file(username, filename="session-username") # Replace with your username, please readme.md file to understand configuration.
+        loader.load_session_from_file(username, filename="session-username")  # Replace with your username, please readme.md file to understand configuration.
         print(f"Session loaded for {username} from session!")
         return loader
     except FileNotFoundError:
@@ -42,14 +43,15 @@ def find_non_followers(followers: set[str], following: set[str]) -> set[str]:
 
 def save_results(non_followers: set[str], output_file: str) -> None:
     try:
-        with open(output_file, 'w') as f:
+        output_path = Path(output_file) 
+        with output_path.open('w') as f:
             for user in non_followers:
                 f.write(f"{user}\n")
         print(f"Results saved to {output_file}")
     except Exception as e:
         print(f"An error occurred while saving results: {e}")
 
-def main() -> None:
+async def main() -> None:
     parser = argparse.ArgumentParser(description="Instagram Followers Checker")
     parser.add_argument('--username', required=True, help="Instagram username")
     parser.add_argument('--output', default="non_followers.txt", help="Output file for non-followers")
@@ -66,8 +68,7 @@ def main() -> None:
     print("Fetching following list...")
     following: set[str] = fetch_following(loader, username)
 
-    # Add delay to avoid rate limits
-    time.sleep(300)
+    await asyncio.sleep(300)
 
     print("Fetching followers list...")
     followers: set[str] = fetch_followers(loader, username)
@@ -88,4 +89,4 @@ def main() -> None:
         print("Everyone you follow is following you back!")
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
